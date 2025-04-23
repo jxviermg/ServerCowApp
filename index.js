@@ -72,3 +72,30 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
 });
+// Ruta para ver los datos de la base de datos
+app.get('/ver-db', (req, res) => {
+  db.all('SELECT * FROM datos', (err, rows) => {
+    if (err) return res.status(500).send('Error al cargar datos');
+
+    let html = `<h1>Datos en la Base de Datos</h1>
+    <table border="1" cellpadding="5" cellspacing="0">
+      <tr><th>ID</th><th>Device</th><th>Time</th><th>Station</th><th>Data</th><th>RSSI</th><th>Seq</th><th>Type</th></tr>`;
+
+    rows.forEach(row => {
+      html += `<tr>
+        <td>${row.id}</td>
+        <td>${row.device}</td>
+        <td>${new Date(parseInt(row.time) * 1000).toLocaleString()}</td>
+        <td>${row.station}</td>
+        <td>${row.data}</td>
+        <td>${row.rssi}</td>
+        <td>${row.seq}</td>
+        <td>${row.type}</td>
+      </tr>`;
+    });
+
+    html += `</table>`;
+    res.send(html);
+  });
+});
+
