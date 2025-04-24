@@ -8,6 +8,7 @@ const port = process.env.PORT || 3000;
 
 // Configurar body-parser para recibir datos JSON
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Configurar la base de datos SQLite
 const db = new sqlite3.Database('sigfox.db', (err) => {
