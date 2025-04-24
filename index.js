@@ -35,11 +35,18 @@ db.run(`
 
 // Ruta para recibir el callback de Sigfox y guardar los datos
 app.post('/callback', (req, res) => {
+  console.log('📩 Datos recibidos del callback:', req.body);
+
   const { id, time, station, data, rssi, seq, type } = req.body;
 
-  // Asegurándonos de que los datos sean correctamente formateados
-  const formattedData = JSON.stringify(data); // Si 'data' es un objeto, lo convertimos en string
-  const formattedRssi = rssi ? rssi.toString() : 'N/A'; // Si 'rssi' es un valor numérico u objeto, lo convertimos en string
+  // Validación opcional
+  if (!id || !time || !data) {
+    console.error('❌ Datos incompletos:', req.body);
+    return res.status(400).send('Datos incompletos');
+  }
+
+  const formattedData = JSON.stringify(data);
+  const formattedRssi = rssi ? rssi.toString() : 'N/A';
   const formattedSeq = seq ? seq.toString() : 'N/A';
   const formattedType = type ? type.toString() : 'N/A';
 
@@ -55,6 +62,7 @@ app.post('/callback', (req, res) => {
     res.status(200).send('OK');
   });
 });
+
 
 // Ruta para ver los datos de la base de datos
 app.get('/ver-db', (req, res) => {
