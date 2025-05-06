@@ -8,6 +8,7 @@ const db = new sqlite3.Database('./datos.db');
 
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use(express.static('public'));
 
 // Crear tabla si no existe
