@@ -96,7 +96,7 @@ app.get('/api/datos', (req, res) => {
   });
 });
 
-// Ruta principal con dashboard mejorado
+// Ruta principal con dashboard simplificado
 app.get('/', (req, res) => {
   const html = `
   <!DOCTYPE html>
@@ -104,46 +104,22 @@ app.get('/', (req, res) => {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard LokaRCZ2 SigFox</title>
+    <title>CowApp - Monitoreo de Ganado</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px;
         background-color: #f8f9fa;
-        padding-top: 20px;
-      }
-      .card {
-        border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-        transition: transform 0.3s;
-        overflow: hidden;
-      }
-      .card:hover {
-        transform: translateY(-5px);
-      }
-      .card-header {
-        background-color: #4a6fdc;
-        color: white;
-        font-weight: bold;
-        border-radius: 10px 10px 0 0 !important;
       }
       #map {
         height: 400px;
-        border-radius: 5px;
+        margin-bottom: 20px;
       }
-      .data-value {
-        font-size: 1.8rem;
-        font-weight: bold;
-        color: #343a40;
-      }
-      .data-label {
-        color: #6c757d;
-        font-size: 0.9rem;
-        text-transform: uppercase;
+      .card {
+        margin-bottom: 20px;
       }
       .refresh-btn {
         position: fixed;
@@ -151,81 +127,28 @@ app.get('/', (req, res) => {
         right: 20px;
         z-index: 1000;
       }
-      .table-responsive {
-        border-radius: 5px;
-        overflow: hidden;
-      }
-      .bg-gradient {
-        background: linear-gradient(135deg, #4a6fdc 0%, #6c5ce7 100%);
-      }
-      .text-primary {
-        color: #4a6fdc !important;
-      }
-      #lastUpdate {
-        font-size: 0.8rem;
-        color: #6c757d;
-      }
-      .pulse-animation {
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0% {
-          box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
-        }
-        70% {
-          box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
-        }
-        100% {
-          box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
-        }
-      }
-
-      .bg-gradient .card-body {
-        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iMjAiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4xKSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
-        background-size: cover;
-      }
     </style>
   </head>
   <body>
     <div class="container">
+      <!-- Encabezado simple -->
       <div class="row mb-4">
-        <div class="col-12">
-          <div class="card bg-gradient text-white">
-            <div class="card-body p-4">
-              <div class="row align-items-center">
-                <div class="col-md-2 text-center mb-3 mb-md-0">
-                  <img src="https://cdn-icons-png.flaticon.com/512/2885/2885417.png" alt="SigFox Logo" class="img-fluid" style="max-height: 80px;">
-                </div>
-                <div class="col-md-8">
-                  <h1 class="display-5 fw-bold">🐮🐄🐄🐄🐄CowApp🐄🐄🐄🐄🐮</h1>
-                  <p class="lead">Monitoreo en tiempo real de mis vaquitas IoT</p>
-                  <div class="d-flex align-items-center">
-                    <div class="me-2">
-                      <span class="badge bg-success pulse-animation">En línea</span>
-                    </div>
-                    <p id="lastUpdate" class="mb-0 text-light">
-                      <i class="bi bi-clock-history"></i> Última actualización: 
-                      <span id="updateTime" class="fw-bold">Cargando...</span>
-                    </p>
-                  </div>
-                </div>
-                <div class="col-md-2 text-center">
-                  <div class="rounded-circle bg-white text-primary p-3 d-inline-flex justify-content-center align-items-center" style="width: 70px; height: 70px;">
-                    <span id="deviceCount" class="h2 mb-0">--</span>
-                  </div>
-                  <p class="text-white mt-2 mb-0">Dispositivos</p>
-                </div>
-              </div>
+        <div class="col-12 bg-success text-white p-3 rounded">
+          <div class="d-flex justify-content-between align-items-center">
+            <h1>CowApp</h1>
+            <div>
+              <p class="mb-0">Última actualización: <span id="updateTime">Cargando...</span></p>
+              <span class="badge bg-light text-dark"><span id="deviceCount">--</span> dispositivos</span>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Mapa y datos básicos -->
       <div class="row">
         <div class="col-md-8">
           <div class="card">
-            <div class="card-header">Ubicación del Dispositivo</div>
+            <div class="card-header bg-success text-white">Ubicación del Ganado</div>
             <div class="card-body">
               <div id="map"></div>
             </div>
@@ -233,69 +156,50 @@ app.get('/', (req, res) => {
         </div>
         <div class="col-md-4">
           <div class="card">
-            <div class="card-header">Información del Dispositivo</div>
+            <div class="card-header bg-success text-white">Datos en Tiempo Real</div>
             <div class="card-body">
               <div class="mb-3">
-                <div class="data-label">ID del Dispositivo</div>
-                <div class="data-value" id="deviceId">--</div>
+                <strong>ID del Dispositivo:</strong>
+                <div id="deviceId" class="fs-5">--</div>
               </div>
               <div class="mb-3">
-                <div class="data-label">Estación</div>
-                <div class="data-value" id="station">--</div>
+                <strong>Temperatura:</strong>
+                <div id="temperature" class="fs-5">--</div>
               </div>
               <div class="mb-3">
-                <div class="data-label">RSSI</div>
-                <div class="data-value" id="rssi">--</div>
+                <strong>Humedad:</strong>
+                <div id="humidity" class="fs-5">--</div>
               </div>
               <div class="mb-3">
-                <div class="data-label">Secuencia</div>
-                <div class="data-value" id="sequence">--</div>
+                <strong>Batería:</strong>
+                <div id="battery" class="fs-5">--</div>
+              </div>
+              <div class="mb-3">
+                <strong>RSSI:</strong>
+                <div id="rssi" class="fs-5">--</div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="row mt-4">
-        <div class="col-md-6">
+      <!-- Gráfico de temperatura -->
+      <div class="row">
+        <div class="col-12">
           <div class="card">
-            <div class="card-header">Temperatura (últimas 10 lecturas)</div>
+            <div class="card-header bg-success text-white">Temperatura (últimas 10 lecturas)</div>
             <div class="card-body">
               <canvas id="temperatureChart"></canvas>
             </div>
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="card">
-            <div class="card-header">Datos en Tiempo Real</div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-6 mb-3">
-                  <div class="data-label">Temperatura</div>
-                  <div class="data-value text-primary" id="temperature">--</div>
-                </div>
-                <div class="col-6 mb-3">
-                  <div class="data-label">Humedad</div>
-                  <div class="data-value text-primary" id="humidity">--</div>
-                </div>
-                <div class="col-6 mb-3">
-                  <div class="data-label">Batería</div>
-                  <div class="data-value text-primary" id="battery">--</div>
-                </div>
-                <div class="col-6 mb-3">
-                  <div class="data-label">Datos (Hex)</div>
-                  <div class="data-value text-primary" id="rawData">--</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div class="row mt-4">
+      <!-- Tabla de historial -->
+      <div class="row">
         <div class="col-12">
           <div class="card">
-            <div class="card-header">Historial de Datos</div>
+            <div class="card-header bg-success text-white">Historial de Datos</div>
             <div class="card-body">
               <div class="table-responsive">
                 <table class="table table-striped table-hover">
@@ -322,8 +226,8 @@ app.get('/', (req, res) => {
       </div>
     </div>
 
-    <button class="btn btn-primary btn-lg rounded-circle refresh-btn" onclick="loadData()">
-      <i class="bi bi-arrow-clockwise"></i> 🔄
+    <button class="btn btn-success btn-lg rounded-circle refresh-btn" onclick="loadData()">
+      🔄
     </button>
 
     <script>
@@ -343,7 +247,7 @@ app.get('/', (req, res) => {
         
         // Marcador inicial (se actualizará con datos reales)
         marker = L.marker([19.432608, -99.133209]).addTo(map)
-          .bindPopup('Dispositivo LokaRCZ2')
+          .bindPopup('Ganado')
           .openPopup();
       }
 
@@ -357,8 +261,8 @@ app.get('/', (req, res) => {
             datasets: [{
               label: 'Temperatura (°C)',
               data: [],
-              borderColor: '#4a6fdc',
-              backgroundColor: 'rgba(74, 111, 220, 0.1)',
+              borderColor: '#28a745',
+              backgroundColor: 'rgba(40, 167, 69, 0.1)',
               borderWidth: 2,
               tension: 0.3,
               fill: true
@@ -394,11 +298,6 @@ app.get('/', (req, res) => {
             document.getElementById('updateTime').textContent = new Date().toLocaleString();
           })
           .catch(error => console.error('Error al cargar datos:', error));
-      }
-
-      // Convertir datos hexadecimales a decimales
-      function hexToDecimal(hex) {
-        return parseInt(hex, 16);
       }
       
       // Extraer bytes específicos del string hexadecimal y convertirlos a valores reales
@@ -478,9 +377,7 @@ app.get('/', (req, res) => {
         
         // Actualizar información del dispositivo
         document.getElementById('deviceId').textContent = lastData.device || '--';
-        document.getElementById('station').textContent = lastData.station || '--';
         document.getElementById('rssi').textContent = lastData.rssi || '--';
-        document.getElementById('sequence').textContent = lastData.seq || '--';
         
         // Actualizar contador de dispositivos
         document.getElementById('deviceCount').textContent = new Set(allData.map(item => item.device)).size;
@@ -499,7 +396,6 @@ app.get('/', (req, res) => {
         
         // Limpiar el string hexadecimal (quitar comillas, etc.)
         rawDataHex = rawDataHex.replace(/["']/g, '');
-        document.getElementById('rawData').textContent = rawDataHex;
         
         // Interpretar los datos hexadecimales
         const parsedData = parseHexData(rawDataHex);
@@ -516,7 +412,7 @@ app.get('/', (req, res) => {
         if (map && marker) {
           marker.setLatLng([parsedData.latitude, parsedData.longitude]);
           map.setView([parsedData.latitude, parsedData.longitude], 13);
-          marker.bindPopup(\`Dispositivo: \${lastData.device}<br>Temperatura: \${parsedData.temperature ? parsedData.temperature.toFixed(1) + ' °C' : '--'}<br>Última actualización: \${lastData.timeFormatted}\`).openPopup();
+          marker.bindPopup(\`Ganado: \${lastData.device}<br>Temperatura: \${parsedData.temperature ? parsedData.temperature.toFixed(1) + ' °C' : '--'}<br>Última actualización: \${lastData.timeFormatted}\`).openPopup();
         }
         
         // Actualizar gráfico de temperatura
@@ -585,7 +481,7 @@ app.get('/', (req, res) => {
             
             // Interpretar los datos para mostrar valores más legibles
             const parsedData = parseHexData(dataDisplay);
-            dataDisplay = \`Hex: \${dataDisplay}<br>Temp: \${parsedData.temperature !== null ? parsedData.temperature.toFixed(1) + '°C' : '--'}, Hum: \${parsedData.humidity !== null ? parsedData.humidity.toFixed(1) + '%' : '--'}\`;
+            dataDisplay = \`Temp: \${parsedData.temperature !== null ? parsedData.temperature.toFixed(1) + '°C' : '--'}, Hum: \${parsedData.humidity !== null ? parsedData.humidity.toFixed(1) + '%' : '--'}\`;
             
           } catch (e) {
             dataDisplay = 'Error al procesar datos';
