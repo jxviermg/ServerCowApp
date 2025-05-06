@@ -44,7 +44,7 @@ app.post('/callback', (req, res) => {
   const { device, time, station, data, rssi, seq, type } = req.body;
 
   // Imprimir el callback recibido en la consola del servidor
-  console.log('Callback recibido:', req.body);
+  console.log('📥 Callback recibido:', req.body);
 
   // Asegurándonos de que los datos sean correctamente formateados
   const formattedData = JSON.stringify(data);
@@ -57,10 +57,10 @@ app.post('/callback', (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `, [device, time, station, formattedData, formattedRssi, formattedSeq, formattedType], (err) => {
     if (err) {
-      console.error('Error al guardar en la base de datos:', err.message);
+      console.error('❌ Error al guardar en la base de datos:', err.message);
       return res.status(500).send('Error');
     }
-    console.log('Callback recibido y guardado');
+    console.log('✅ Callback recibido y guardado');
     res.status(200).send('OK');
   });
 });
@@ -70,35 +70,31 @@ app.get('/api/datos', (req, res) => {
   db.all('SELECT * FROM datos ORDER BY time DESC LIMIT 50', (err, rows) => {
     if (err) return res.status(500).json({ error: 'Error al cargar datos' });
     
+    // Procesar los datos para el cliente
     const processedData = rows.map(row => {
-      let hexData = row.data.replace(/"/g, ''); // Elimina comillas extra si hay
-
-      // Convertir string hexadecimal a array de decimales
-      const decimalData = [];
-      for (let i = 0; i < hexData.length; i += 2) {
-        const byteHex = hexData.slice(i, i + 2);
-        const byteDec = parseInt(byteHex, 16);
-        if (!isNaN(byteDec)) decimalData.push(byteDec);
+      let dataObj;
+      try {
+        dataObj = JSON.parse(row.data);
+      } catch (e) {
+        dataObj = { raw: row.data };
       }
-
+      
       return {
         id: row.id,
         device: row.device,
-        time: parseInt(row.time) * 1000,
+        time: parseInt(row.time) * 1000, // Convertir a milisegundos para JavaScript
         timeFormatted: new Date(parseInt(row.time) * 1000).toLocaleString(),
         station: row.station,
-        dataHex: hexData,
-        dataDecimal: decimalData,
+        data: dataObj,
         rssi: row.rssi,
         seq: row.seq,
         type: row.type
       };
     });
-
+    
     res.json(processedData);
   });
 });
-
 
 // Ruta principal con dashboard simplificado
 app.get('/', (req, res) => {
