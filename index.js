@@ -6,8 +6,9 @@ const sqlite3 = require('sqlite3').verbose();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configurar body-parser para recibir datos JSON
+// Configurar body-parser para recibir datos JSON y datos urlencoded
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true })); // <-- Esto permite procesar application/x-www-form-urlencoded
 
 // Configurar la base de datos SQLite
 const db = new sqlite3.Database('sigfox.db', (err) => {
@@ -34,7 +35,7 @@ db.run(`
 
 // Ruta para recibir el callback de Sigfox y guardar los datos
 app.post('/callback', (req, res) => {
-  const { id, time, station, data, rssi, seq, type } = req.body;
+  const { device, time, station, data, rssi, seq, type } = req.body;
 
   // Imprimir el callback recibido en la consola del servidor
   console.log('📥 Callback recibido:', req.body);
@@ -48,7 +49,7 @@ app.post('/callback', (req, res) => {
   db.run(`
     INSERT INTO datos (device, time, station, data, rssi, seq, type)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `, [id, time, station, formattedData, formattedRssi, formattedSeq, formattedType], (err) => {
+  `, [device, time, station, formattedData, formattedRssi, formattedSeq, formattedType], (err) => {
     if (err) {
       console.error('❌ Error al guardar en la base de datos:', err.message);
       return res.status(500).send('Error');
