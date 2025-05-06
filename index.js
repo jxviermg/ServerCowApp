@@ -120,6 +120,7 @@ app.get('/', (req, res) => {
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
         transition: transform 0.3s;
+        overflow: hidden;
       }
       .card:hover {
         transform: translateY(-5px);
@@ -155,7 +156,7 @@ app.get('/', (req, res) => {
         overflow: hidden;
       }
       .bg-gradient {
-        background: linear-gradient(120deg, #4a6fdc, #3f5bb5);
+        background: linear-gradient(135deg, #4a6fdc 0%, #6c5ce7 100%);
       }
       .text-primary {
         color: #4a6fdc !important;
@@ -164,6 +165,26 @@ app.get('/', (req, res) => {
         font-size: 0.8rem;
         color: #6c757d;
       }
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+      }
+
+      .bg-gradient .card-body {
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iMjAiIGZpbGw9InJnYmEoMjU1LCAyNTUsIDI1NSwgMC4xKSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+        background-size: cover;
+      }
     </style>
   </head>
   <body>
@@ -171,10 +192,31 @@ app.get('/', (req, res) => {
       <div class="row mb-4">
         <div class="col-12">
           <div class="card bg-gradient text-white">
-            <div class="card-body">
-              <h1 class="display-5">Dashboard LokaRCZ2 SigFox</h1>
-              <p class="lead">Monitoreo en tiempo real de dispositivos</p>
-              <p id="lastUpdate">Última actualización: <span id="updateTime">Cargando...</span></p>
+            <div class="card-body p-4">
+              <div class="row align-items-center">
+                <div class="col-md-2 text-center mb-3 mb-md-0">
+                  <img src="https://cdn-icons-png.flaticon.com/512/2885/2885417.png" alt="SigFox Logo" class="img-fluid" style="max-height: 80px;">
+                </div>
+                <div class="col-md-8">
+                  <h1 class="display-5 fw-bold">Dashboard LokaRCZ2 SigFox</h1>
+                  <p class="lead">Monitoreo en tiempo real de dispositivos IoT</p>
+                  <div class="d-flex align-items-center">
+                    <div class="me-2">
+                      <span class="badge bg-success pulse-animation">En línea</span>
+                    </div>
+                    <p id="lastUpdate" class="mb-0 text-light">
+                      <i class="bi bi-clock-history"></i> Última actualización: 
+                      <span id="updateTime" class="fw-bold">Cargando...</span>
+                    </p>
+                  </div>
+                </div>
+                <div class="col-md-2 text-center">
+                  <div class="rounded-circle bg-white text-primary p-3 d-inline-flex justify-content-center align-items-center" style="width: 70px; height: 70px;">
+                    <span id="deviceCount" class="h2 mb-0">--</span>
+                  </div>
+                  <p class="text-white mt-2 mb-0">Dispositivos</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -358,6 +400,74 @@ app.get('/', (req, res) => {
       function hexToDecimal(hex) {
         return parseInt(hex, 16);
       }
+      
+      // Extraer bytes específicos del string hexadecimal y convertirlos a valores reales
+      function parseHexData(hexString) {
+        // Eliminar cualquier carácter no hexadecimal
+        hexString = hexString.replace(/[^0-9A-Fa-f]/g, '');
+        
+        // Para un formato típico de SigFox, ajustamos la interpretación:
+        // Ejemplo de formato: primeros 2 bytes (4 caracteres) para temperatura
+        let result = {
+          temperature: null,
+          humidity: null,
+          battery: null,
+          latitude: 19.432608,  // Valor por defecto
+          longitude: -99.133209 // Valor por defecto
+        };
+        
+        try {
+          if (hexString.length >= 4) {
+            // Temperatura: Primeros 2 bytes (convertidos a signed int y divididos por 10)
+            let tempHex = hexString.substring(0, 4);
+            let tempValue = parseInt(tempHex, 16);
+            // Si el valor es signed y el bit más significativo está activado
+            if (tempValue > 0x7FFF) {
+              tempValue = tempValue - 0x10000;
+            }
+            result.temperature = tempValue / 10;
+            
+            // Humedad: Siguientes 2 bytes (convertidos a unsigned int y divididos por 10)
+            if (hexString.length >= 8) {
+              let humHex = hexString.substring(4, 8);
+              let humValue = parseInt(humHex, 16);
+              result.humidity = humValue / 10;
+              
+              // Batería: Siguientes 2 bytes (convertidos a unsigned int y divididos por 1000)
+              if (hexString.length >= 12) {
+                let batHex = hexString.substring(8, 12);
+                let batValue = parseInt(batHex, 16);
+                result.battery = batValue / 1000;
+                
+                // Coordenadas (si están disponibles)
+                if (hexString.length >= 20) {
+                  // Latitud: 4 bytes siguientes
+                  let latHex = hexString.substring(12, 20);
+                  let latValue = parseInt(latHex, 16);
+                  if (latValue > 0x7FFFFFFF) {
+                    latValue = latValue - 0x100000000;
+                  }
+                  result.latitude = latValue / 1000000;
+                  
+                  // Longitud: últimos 4 bytes
+                  if (hexString.length >= 28) {
+                    let lonHex = hexString.substring(20, 28);
+                    let lonValue = parseInt(lonHex, 16);
+                    if (lonValue > 0x7FFFFFFF) {
+                      lonValue = lonValue - 0x100000000;
+                    }
+                    result.longitude = lonValue / 1000000;
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.error('Error al analizar datos hexadecimales:', e);
+        }
+        
+        return result;
+      }
 
       // Actualizar el dashboard con los datos recibidos
       function updateDashboard() {
@@ -372,7 +482,10 @@ app.get('/', (req, res) => {
         document.getElementById('rssi').textContent = lastData.rssi || '--';
         document.getElementById('sequence').textContent = lastData.seq || '--';
         
-        // Procesar datos en bruto (asumiendo formato hexadecimal)
+        // Actualizar contador de dispositivos
+        document.getElementById('deviceCount').textContent = new Set(allData.map(item => item.device)).size;
+        
+        // Procesar datos en bruto
         let rawDataHex = '';
         if (typeof lastData.data === 'object' && lastData.data !== null) {
           rawDataHex = JSON.stringify(lastData.data);
@@ -384,44 +497,26 @@ app.get('/', (req, res) => {
           }
         }
         
+        // Limpiar el string hexadecimal (quitar comillas, etc.)
+        rawDataHex = rawDataHex.replace(/["']/g, '');
         document.getElementById('rawData').textContent = rawDataHex;
         
-        // Aquí deberías interpretar los datos hexadecimales según el formato específico de tu dispositivo
-        // Este es un ejemplo genérico, ajústalo a tu formato específico
-        let temp = '--';
-        let humidity = '--';
-        let battery = '--';
-        let latitude = 19.432608;  // Valor por defecto
-        let longitude = -99.133209; // Valor por defecto
-        
-        // Ejemplo de interpretación (ajustar según el formato real de tus datos)
-        try {
-          if (typeof rawDataHex === 'string' && rawDataHex.length >= 8) {
-            // Ejemplo: primeros 2 bytes para temperatura, siguientes 2 para humedad, etc.
-            temp = (hexToDecimal(rawDataHex.substring(0, 4)) / 10).toFixed(1) + ' °C';
-            humidity = (hexToDecimal(rawDataHex.substring(4, 8)) / 10).toFixed(1) + ' %';
-            battery = (hexToDecimal(rawDataHex.substring(8, 12)) / 100).toFixed(2) + ' V';
-            
-            // Coordenadas (si están disponibles)
-            if (rawDataHex.length >= 20) {
-              latitude = hexToDecimal(rawDataHex.substring(12, 20)) / 1000000;
-              longitude = hexToDecimal(rawDataHex.substring(20, 28)) / 1000000;
-            }
-          }
-        } catch (e) {
-          console.error('Error al procesar datos hexadecimales:', e);
-        }
+        // Interpretar los datos hexadecimales
+        const parsedData = parseHexData(rawDataHex);
         
         // Actualizar valores en tiempo real
-        document.getElementById('temperature').textContent = temp;
-        document.getElementById('humidity').textContent = humidity;
-        document.getElementById('battery').textContent = battery;
+        document.getElementById('temperature').textContent = 
+          parsedData.temperature !== null ? parsedData.temperature.toFixed(1) + ' °C' : '--';
+        document.getElementById('humidity').textContent = 
+          parsedData.humidity !== null ? parsedData.humidity.toFixed(1) + ' %' : '--';
+        document.getElementById('battery').textContent = 
+          parsedData.battery !== null ? parsedData.battery.toFixed(2) + ' V' : '--';
         
         // Actualizar mapa
         if (map && marker) {
-          marker.setLatLng([latitude, longitude]);
-          map.setView([latitude, longitude], 13);
-          marker.bindPopup(\`Dispositivo: \${lastData.device}<br>Temperatura: \${temp}<br>Última actualización: \${lastData.timeFormatted}\`).openPopup();
+          marker.setLatLng([parsedData.latitude, parsedData.longitude]);
+          map.setView([parsedData.latitude, parsedData.longitude], 13);
+          marker.bindPopup(\`Dispositivo: \${lastData.device}<br>Temperatura: \${parsedData.temperature ? parsedData.temperature.toFixed(1) + ' °C' : '--'}<br>Última actualización: \${lastData.timeFormatted}\`).openPopup();
         }
         
         // Actualizar gráfico de temperatura
@@ -444,27 +539,24 @@ app.get('/', (req, res) => {
         });
         
         const temperatures = chartData.map(item => {
-          // Extraer temperatura de los datos (ajustar según tu formato)
-          let temp = 0;
-          try {
-            let rawData = '';
-            if (typeof item.data === 'object' && item.data !== null) {
-              rawData = JSON.stringify(item.data);
-            } else if (typeof item.data === 'string') {
-              try {
-                rawData = JSON.parse(item.data);
-              } catch (e) {
-                rawData = item.data;
-              }
+          // Extraer temperatura de los datos
+          let rawDataHex = '';
+          if (typeof item.data === 'object' && item.data !== null) {
+            rawDataHex = JSON.stringify(item.data);
+          } else if (typeof item.data === 'string') {
+            try {
+              rawDataHex = JSON.parse(item.data);
+            } catch (e) {
+              rawDataHex = item.data;
             }
-            
-            if (typeof rawData === 'string' && rawData.length >= 4) {
-              temp = hexToDecimal(rawData.substring(0, 4)) / 10;
-            }
-          } catch (e) {
-            console.error('Error al procesar temperatura:', e);
           }
-          return temp;
+          
+          // Limpiar el string hexadecimal
+          rawDataHex = rawDataHex.replace(/["']/g, '');
+          
+          // Interpretar los datos
+          const parsedData = parseHexData(rawDataHex);
+          return parsedData.temperature || null;
         });
         
         temperatureChart.data.labels = labels;
@@ -487,6 +579,14 @@ app.get('/', (req, res) => {
             } else {
               dataDisplay = item.data;
             }
+            
+            // Limpiar el string
+            dataDisplay = dataDisplay.replace(/["']/g, '');
+            
+            // Interpretar los datos para mostrar valores más legibles
+            const parsedData = parseHexData(dataDisplay);
+            dataDisplay = \`Hex: \${dataDisplay}<br>Temp: \${parsedData.temperature !== null ? parsedData.temperature.toFixed(1) + '°C' : '--'}, Hum: \${parsedData.humidity !== null ? parsedData.humidity.toFixed(1) + '%' : '--'}\`;
+            
           } catch (e) {
             dataDisplay = 'Error al procesar datos';
           }
