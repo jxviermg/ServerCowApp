@@ -36,6 +36,9 @@ db.run(`
 app.post('/callback', (req, res) => {
   const { id, time, station, data, rssi, seq, type } = req.body;
 
+  // Imprimir el callback recibido en la consola del servidor
+  console.log('📥 Callback recibido:', req.body);
+
   // Asegurándonos de que los datos sean correctamente formateados
   const formattedData = JSON.stringify(data); // Si 'data' es un objeto, lo convertimos en string
   const formattedRssi = rssi ? rssi.toString() : 'N/A'; // Si 'rssi' es un valor numérico u objeto, lo convertimos en string
