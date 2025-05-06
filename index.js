@@ -198,8 +198,8 @@ app.get('/', (req, res) => {
                   <img src="https://cdn-icons-png.flaticon.com/512/2885/2885417.png" alt="SigFox Logo" class="img-fluid" style="max-height: 80px;">
                 </div>
                 <div class="col-md-8">
-                  <h1 class="display-5 fw-bold">Dashboard LokaRCZ2 SigFox</h1>
-                  <p class="lead">Monitoreo en tiempo real de dispositivos IoT</p>
+                  <h1 class="display-5 fw-bold">🐮🐄🐄🐄🐄CowApp🐄🐄🐄🐄🐮</h1>
+                  <p class="lead">Monitoreo en tiempo real de mis vaquitas IoT</p>
                   <div class="d-flex align-items-center">
                     <div class="me-2">
                       <span class="badge bg-success pulse-animation">En línea</span>
