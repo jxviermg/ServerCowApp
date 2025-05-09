@@ -94,6 +94,7 @@ const html = `
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
   <style>
     #map { height: 400px; width: 100%; }
     .refresh-btn {
@@ -281,11 +282,9 @@ const html = `
   function showAlert(message, type) {
     const alertContainer = document.getElementById('alertContainer');
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+    alertDiv.className = "alert alert-" + type + " alert-dismissible fade show";
+    alertDiv.innerHTML = message + 
+      '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
     alertContainer.appendChild(alertDiv);
     
     // Eliminar la alerta después de 10 segundos
@@ -419,10 +418,10 @@ const html = `
       const tempElement = document.getElementById('temperatureAlert');
       if (parsedData.temperature < 1650) {
         tempElement.innerHTML = '<div class="alert alert-warning p-1 m-0">Advertencia: Temperatura baja</div>';
-        showAlert(`Temperatura baja: ${parsedData.temperature.toFixed(1)} °C`, 'warning');
+        showAlert('Temperatura baja: ' + parsedData.temperature.toFixed(1) + ' °C', 'warning');
       } else if (parsedData.temperature > 1700) {
         tempElement.innerHTML = '<div class="alert alert-danger p-1 m-0">Advertencia: Temperatura alta</div>';
-        showAlert(`Temperatura alta: ${parsedData.temperature.toFixed(1)} °C`, 'danger');
+        showAlert('Temperatura alta: ' + parsedData.temperature.toFixed(1) + ' °C', 'danger');
       } else {
         tempElement.innerHTML = '';
       }
@@ -433,10 +432,10 @@ const html = `
       const humElement = document.getElementById('humidityAlert');
       if (parsedData.humidity < 1200) {
         humElement.innerHTML = '<div class="alert alert-warning p-1 m-0">Advertencia: Humedad baja</div>';
-        showAlert(`Humedad baja: ${parsedData.humidity.toFixed(1)} %`, 'warning');
+        showAlert('Humedad baja: ' + parsedData.humidity.toFixed(1) + ' %', 'warning');
       } else if (parsedData.humidity > 2200) {
         humElement.innerHTML = '<div class="alert alert-danger p-1 m-0">Advertencia: Humedad alta</div>';
-        showAlert(`Humedad alta: ${parsedData.humidity.toFixed(1)} %`, 'danger');
+        showAlert('Humedad alta: ' + parsedData.humidity.toFixed(1) + ' %', 'danger');
       } else {
         humElement.innerHTML = '';
       }
@@ -447,7 +446,7 @@ const html = `
       const batElement = document.getElementById('batteryAlert');
       if (parsedData.battery < 50) {
         batElement.innerHTML = '<div class="alert alert-danger p-1 m-0">Advertencia: Batería baja</div>';
-        showAlert(`Batería baja: ${parsedData.battery.toFixed(2)} V`, 'danger');
+        showAlert('Batería baja: ' + parsedData.battery.toFixed(2) + ' V', 'danger');
       } else {
         batElement.innerHTML = '';
       }
@@ -457,7 +456,7 @@ const html = `
     if (map && marker) {
       marker.setLatLng([parsedData.latitude, parsedData.longitude]);
       map.setView([parsedData.latitude, parsedData.longitude], 13);
-      marker.bindPopup(`Ganado: ${lastData.device}<br>Temperatura: ${parsedData.temperature ? parsedData.temperature.toFixed(1) + ' °C' : '--'}<br>Última actualización: ${lastData.timeFormatted}`).openPopup();
+      marker.bindPopup('Ganado: ' + lastData.device + '<br>Temperatura: ' + (parsedData.temperature ? parsedData.temperature.toFixed(1) + ' °C' : '--') + '<br>Última actualización: ' + lastData.timeFormatted).openPopup();
     }
     
     // Actualizar gráfico de temperatura
@@ -526,20 +525,20 @@ const html = `
         
         // Interpretar los datos para mostrar valores más legibles
         const parsedData = parseHexData(dataDisplay);
-        dataDisplay = `Temp: ${parsedData.temperature !== null ? parsedData.temperature.toFixed(1) + '°C' : '--'}, Hum: ${parsedData.humidity !== null ? parsedData.humidity.toFixed(1) + '%' : '--'}`;
+        dataDisplay = 'Temp: ' + (parsedData.temperature !== null ? parsedData.temperature.toFixed(1) + '°C' : '--') + 
+                      ', Hum: ' + (parsedData.humidity !== null ? parsedData.humidity.toFixed(1) + '%' : '--');
         
       } catch (e) {
         dataDisplay = 'Error al procesar datos';
       }
       
-      row.innerHTML = `
-        <td>${item.id}</td>
-        <td>${item.timeFormatted}</td>
-        <td>${item.device}</td>
-        <td>${dataDisplay}</td>
-        <td>${item.rssi}</td>
-        <td>${item.seq}</td>
-      `;
+      row.innerHTML = 
+        '<td>' + item.id + '</td>' +
+        '<td>' + item.timeFormatted + '</td>' +
+        '<td>' + item.device + '</td>' +
+        '<td>' + dataDisplay + '</td>' +
+        '<td>' + item.rssi + '</td>' +
+        '<td>' + item.seq + '</td>';
       
       tableBody.appendChild(row);
     });
